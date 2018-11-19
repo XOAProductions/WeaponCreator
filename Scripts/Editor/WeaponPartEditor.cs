@@ -5,6 +5,9 @@ using UnityEditor;
 
 namespace XOAProductions.WeaponDesigner
 {
+    /// <summary>
+    /// Editor for weapon parts
+    /// </summary>
     [CustomEditor(typeof(WeaponPart))]
     public class WeaponPartEditor : Editor
     {

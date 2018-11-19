@@ -30,7 +30,12 @@ namespace XOAProductions.WeaponDesigner
         /// <summary>
         /// the type of part this weapon part represents
         /// </summary>
-        public WeaponPartType PartType { get; set; }
+        public WeaponPartType PartType { get; set;}
+
+        /// <summary>
+        /// the name of this weapon part
+        /// </summary>
+        public string PartName;
 
         /// <summary>
         /// the parent of this weaponpart
@@ -45,7 +50,7 @@ namespace XOAProductions.WeaponDesigner
         /// <summary>
         /// the adaptors this part has
         /// </summary>
-        public List<Adaptor> Adaptors { get; private set; }
+        public List<Adaptor> Adaptors { get; set; }
 
         /// <summary>
         /// a link between the adaptors of this part and the Child that is connected to a specific adaptor.
@@ -60,7 +65,7 @@ namespace XOAProductions.WeaponDesigner
         /// <param name="_parent">the Parent object of this part</param>
         public WeaponPart(WeaponPart _parent)
         {
-            changeParent(_parent);
+            ChangeParent(_parent);
             Children = new List<WeaponPart>();
         }
 
@@ -73,7 +78,7 @@ namespace XOAProductions.WeaponDesigner
         /// <param name="_adaptorConnections">OPTIONAL: to which adaptors the children are connected, if not specified the children are connected randomly</param>
         public WeaponPart (WeaponPart _parent, List<WeaponPart> _children, Dictionary<WeaponPart, Adaptor> _adaptorConnections = null)
         {
-            changeParent(_parent);
+            ChangeParent(_parent);
             Children = _children;
 
             if (_adaptorConnections != null)
@@ -84,7 +89,7 @@ namespace XOAProductions.WeaponDesigner
                 int i = 0;
                 foreach (WeaponPart child in Children)
                 {
-                    child.connectToAdaptor(Adaptors[i]);
+                    ConnectChildToAdaptor(Adaptors[i], child);
                     AdaptorConnections.Add(child, Adaptors[i]);
                     i++;
                 }
@@ -93,12 +98,17 @@ namespace XOAProductions.WeaponDesigner
         }
 
         /// <summary>
-        /// connects this weapon part to an adaptor.
+        /// connects a child to an adaptor.
         /// </summary>
         /// <param name="adaptor"></param>
-        public void connectToAdaptor(Adaptor adaptor)
+        public void ConnectChildToAdaptor(Adaptor adaptor, WeaponPart child)
         {
-            throw new System.NotImplementedException();
+            child.transform.parent = adaptor.ChildPartTransform;
+            if (AdaptorConnections == null)
+                AdaptorConnections = new Dictionary<WeaponPart, Adaptor>();
+
+            AdaptorConnections.Add(child, adaptor);
+          
             //TODO: here we need to physically move the weapon part to align with the adaptor and do other stuff to make sure everything fits
         }
 
@@ -106,41 +116,68 @@ namespace XOAProductions.WeaponDesigner
         /// adds a child to this part
         /// </summary>
         /// <param name="child">the child to add</param>
-        public void addChild(WeaponPart child)
+        public void AddChild(WeaponPart child)
         {
             if (Children.Contains(child))
                 return;
 
             Children.Add(child);
+            child.Parent = this;
         }
 
         /// <summary>
         /// removes a child from this part
         /// </summary>
         /// <param name="child">the child to remove </param>
-        public void removeChild(WeaponPart child)
+        public void RemoveChild(WeaponPart child)
         {
             if (!Children.Contains(child))
                 return;
 
             Children.Remove(child);
+            AdaptorConnections.Remove(child);
         }    
 
         /// <summary>
         /// changes this part's Parent and automatically assigns itself to the Parent as a child
         /// </summary>
         /// <param name="newParent">the new Parent</param>
-        public void changeParent(WeaponPart newParent)
+        public void ChangeParent(WeaponPart newParent)
         {
             if (newParent == null)
                 return;
 
             if (Parent != null)
-                Parent.removeChild(this);
+                Parent.RemoveChild(this);
 
             Parent = newParent;
 
-            Parent.addChild(this);
+            Parent.AddChild(this);
+        }
+
+        /// <summary>
+        /// quick setup for tests
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="type"></param>
+        public void TestSetup(string name, WeaponPartType type, WeaponPart _parent)
+        {
+            this.PartName = name;
+            this.PartType = type;
+
+            ChangeParent(_parent);
+            Children = new List<WeaponPart>();
+        }
+
+        /// <summary>
+        /// Detaches all child parts from this part
+        /// </summary>
+        public void DetachAllChildren()
+        {
+            foreach(WeaponPart child in Children)
+            {
+                child.transform.parent = null;
+            }
         }
     }
 }

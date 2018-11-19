@@ -10,6 +10,8 @@ namespace XOAProductions.WeaponDesigner
 
         public string CloseAnimationBoolName = "Closed";
         public Animator anim;
+        public Transform ChildPartTransform;
+        public WeaponPartType WeaponTypeOfAdaptor;
 
         private void Start()
         {
