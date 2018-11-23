@@ -83,13 +83,18 @@ namespace XOAProductions.WeaponDesigner {
             return result;
         }
 
+        /// <summary>
+        /// Replaces a weapon part by another of same type, trying to keep the sub-hierachy intact
+        /// </summary>
+        /// <param name="partToReplace">the part that will be replaced</param>
+        /// <param name="replacementPart">the part that it will be replaced by</param>
         public void ReplaceWeaponPart(WeaponPart partToReplace, WeaponPart replacementPart)
         {
             if (trigger == null)
                 return;
 
             //save children
-            var children = partToReplace.Children;
+            var children = new List<WeaponPart>(partToReplace.Children);
 
             if (partToReplace != trigger)
             {
@@ -122,7 +127,7 @@ namespace XOAProductions.WeaponDesigner {
             }
 
             List<WeaponPart> excessParts = new List<WeaponPart>();
-            List<WeaponPart> childrenCopy = children;
+            List<WeaponPart> childrenCopy = new List<WeaponPart>(children);
             int i = 0;
             //reconnect children
             foreach(Adaptor adaptor in replacementPart.Adaptors)
@@ -149,6 +154,72 @@ namespace XOAProductions.WeaponDesigner {
             //destroy the actual part
             Destroy(partToReplace.gameObject);
 
+        }
+
+        /// <summary>
+        /// Removes a weapon part completely, including the sub-hierachy
+        /// </summary>
+        /// <param name="partToRemove">the part to Remove</param>
+        public void RemoveWeaponPart(WeaponPart partToRemove)
+        {
+            if(partToRemove.Parent != null)
+            {
+                partToRemove.Parent.RemoveChild(partToRemove);
+            }
+
+            Destroy(partToRemove.gameObject);
+
+            //TODO: Obviously, this needs to be animated later on
+
+        }
+
+        /// <summary>
+        /// Adds a weapon part to the specified adaptor
+        /// </summary>
+        /// <param name="adaptor">the adaptor to which to add the part</param>
+        /// <param name="partToAdd">the part to add</param>
+        public void AddWeaponPart(Adaptor adaptor, WeaponPart partToAdd)
+        {
+            WeaponPart adaptorPart = FindWeaponPartRecursive(x => x.Adaptors.Contains(adaptor));
+            if (adaptor == null)
+                return;
+
+            adaptorPart.AddChild(partToAdd);
+            adaptorPart.ConnectChildToAdaptor(adaptor, partToAdd);
+        }
+
+        /// <summary>
+        /// finds all adaptors that are not yet connected to a child weaponpart
+        /// </summary>
+        /// <param name="startingPart">the part to start from, leave empty to start from the beginning</param>
+        /// <returns>List of all unconnected adaptors</returns>
+        public List<Adaptor> FindUnconnectedAdaptorsRecursively(WeaponPart startingPart = null)
+        {
+            List<Adaptor> result = new List<Adaptor>();
+
+
+            if (trigger == null)
+                return result;
+
+            if (startingPart == null)
+                startingPart = trigger;
+
+            if (startingPart.AdaptorConnections == null)
+                startingPart.AdaptorConnections = new Dictionary<WeaponPart, Adaptor>();
+
+            if (startingPart.AdaptorConnections.Count < startingPart.Adaptors.Count)
+            {
+                foreach (Adaptor adaptor in startingPart.Adaptors)
+                    if (!startingPart.AdaptorConnections.ContainsValue(adaptor))
+                        result.Add(adaptor);
+            }
+
+            foreach (WeaponPart child in startingPart.Children)
+            {
+                result.AddRange(FindUnconnectedAdaptorsRecursively(child));
+            }
+
+            return result;
         }
     }
 }

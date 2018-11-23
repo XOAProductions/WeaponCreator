@@ -1,3 +1,10 @@
-﻿{
-	"name": "WeaponDesignerAssembly"
+{
+    "name": "WeaponDesignerAssembly",
+    "references": [
+        "QuickInspectorAssembly"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false
 }

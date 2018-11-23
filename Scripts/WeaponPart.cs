@@ -22,6 +22,20 @@ namespace XOAProductions.WeaponDesigner
         CosmeticAttachment
     }
 
+    public static class WeaponPartTypeStrings{
+
+        public static string[] WeaponPartTypes = new string[] { "Trigger",
+                                                         "LoadingMechanism",
+                                                         "FiringMechanism",
+                                                         "EnergyContainer",
+                                                         "Barrel",
+                                                         "AmmoClip",
+                                                         "Stock",
+                                                         "BarrelAttachment",
+                                                         "Scope",
+                                                         "CosmeticAttachment" };
+
+    }
     /// <summary>
     /// Base class for every weapon part that's connected in a weapon. Basically the node of the WeaponStructure tree
     /// </summary>
@@ -32,10 +46,17 @@ namespace XOAProductions.WeaponDesigner
         /// </summary>
         public WeaponPartType PartType { get; set;}
 
+       
+
         /// <summary>
         /// the name of this weapon part
         /// </summary>
         public string PartName;
+
+        /// <summary>
+        /// the id that this part has in Items.json
+        /// </summary>
+        public string PartID;
 
         /// <summary>
         /// the parent of this weaponpart
@@ -45,28 +66,29 @@ namespace XOAProductions.WeaponDesigner
         /// <summary>
         /// the Children of this weaponpart
         /// </summary>
-        public List<WeaponPart> Children { get; private set; }
+        public List<WeaponPart> Children = new List<WeaponPart>();
 
         /// <summary>
         /// the adaptors this part has
         /// </summary>
-        public List<Adaptor> Adaptors { get; set; }
+        public List<Adaptor> Adaptors = new List<Adaptor>();
 
         /// <summary>
         /// a link between the adaptors of this part and the Child that is connected to a specific adaptor.
         /// For example, if this part has three barrel adaptors, you could look up which child-barrel is connected to which of the adaptors.
         /// </summary>
-        public Dictionary<WeaponPart, Adaptor> AdaptorConnections { get; private set; }
+        public Dictionary<WeaponPart, Adaptor> AdaptorConnections { get;  set; }
 
         /// <summary>
         /// initializes the part with just the Parent
         /// assigns itself to the Parent as a child
         /// </summary>
         /// <param name="_parent">the Parent object of this part</param>
-        public WeaponPart(WeaponPart _parent)
+        public WeaponPart(WeaponPart _parent, string _partID)
         {
             ChangeParent(_parent);
             Children = new List<WeaponPart>();
+            PartID = _partID;
         }
 
         /// <summary>
@@ -76,10 +98,11 @@ namespace XOAProductions.WeaponDesigner
         /// <param name="_parent">the Parent object of this part</param>
         /// <param name="_children">the Children objects of this part</param>
         /// <param name="_adaptorConnections">OPTIONAL: to which adaptors the children are connected, if not specified the children are connected randomly</param>
-        public WeaponPart (WeaponPart _parent, List<WeaponPart> _children, Dictionary<WeaponPart, Adaptor> _adaptorConnections = null)
+        public WeaponPart (WeaponPart _parent, List<WeaponPart> _children, string _partID, Dictionary<WeaponPart, Adaptor> _adaptorConnections = null)
         {
             ChangeParent(_parent);
             Children = _children;
+            PartID = _partID;
 
             if (_adaptorConnections != null)
                 AdaptorConnections = _adaptorConnections;
@@ -103,9 +126,17 @@ namespace XOAProductions.WeaponDesigner
         /// <param name="adaptor"></param>
         public void ConnectChildToAdaptor(Adaptor adaptor, WeaponPart child)
         {
-            child.transform.parent = adaptor.ChildPartTransform;
+           
             if (AdaptorConnections == null)
                 AdaptorConnections = new Dictionary<WeaponPart, Adaptor>();
+
+           // if (AdaptorConnections.ContainsValue(adaptor))//adaptor already connected
+           //     return;
+
+            if (adaptor.WeaponTypeOfAdaptor != child.PartType)
+                return;
+
+            child.transform.parent = adaptor.ChildPartTransform;
 
             AdaptorConnections.Add(child, adaptor);
           
@@ -119,6 +150,9 @@ namespace XOAProductions.WeaponDesigner
         public void AddChild(WeaponPart child)
         {
             if (Children.Contains(child))
+                return;
+            
+            if (Children.Count == Adaptors.Count) //we can't have more children than adaptors
                 return;
 
             Children.Add(child);
@@ -177,7 +211,12 @@ namespace XOAProductions.WeaponDesigner
             foreach(WeaponPart child in Children)
             {
                 child.transform.parent = null;
+                
             }
+
+            Children.Clear();
+            if(AdaptorConnections != null)
+                AdaptorConnections.Clear();
         }
     }
 }
