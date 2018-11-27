@@ -4,7 +4,20 @@ using UnityEngine;
 
 
 namespace XOAProductions.WeaponDesigner
-{
+{ 
+    public enum AdaptorTypes
+    {
+        Trigger,
+        LoadingMechanism,
+        FiringMechanism,
+        EnergyContainer,
+        Barrel,
+        AmmoClip,
+        Stock,
+        BarrelAttachment,
+        Scope,
+        
+    }
     public class Adaptor : MonoBehaviour
     {
 

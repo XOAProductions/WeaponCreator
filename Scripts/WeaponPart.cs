@@ -10,16 +10,16 @@ namespace XOAProductions.WeaponDesigner
     /// </summary>
     public enum WeaponPartType
     {
-        Trigger,
-        LoadingMechanism,
-        FiringMechanism,
-        EnergyContainer,
-        Barrel,
-        AmmoClip,
-        Stock,
-        BarrelAttachment,
-        Scope,
-        CosmeticAttachment
+        Trigger = 0,
+        LoadingMechanism = 1,
+        FiringMechanism = 2,
+        EnergyContainer = 3,
+        Barrel = 4,
+        AmmoClip = 5,
+        Stock = 6,
+        BarrelAttachment = 7,
+        Scope = 8,
+        CosmeticAttachment = 9
     }
 
     public static class WeaponPartTypeStrings{

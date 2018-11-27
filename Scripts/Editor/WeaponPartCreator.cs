@@ -9,25 +9,29 @@ namespace XOAProductions.WeaponDesigner
     {
         public enum WeaponPartCreationState
         {
+            SetupPartInfo,
             AssignMeshes,
-            MoveMeshes,
             AssignAdaptors,
             MoveAdaptors,
-            PlaceOwnAdaptorConnection
+            ConfirmAndSave
         }
 
-        public WeaponPartCreationState currentState;
+        public WeaponPartCreationState currentState = WeaponPartCreationState.SetupPartInfo;
 
-        GameObject partRoot;
+        public GameObject partRoot;
          GameObject partMeshesRoot;
          WeaponPart weaponPart;
 
-        public static string partName;
-        public static string partID;
+        public List<Mesh> AdaptorMeshes = new List<Mesh>();
+        public List<GameObject> AdaptorPrefabs = new List<GameObject>();
+
+        public string partName;
+        public string partID;
 
         static string prefabPath = "Assets/Weapons/Resources/WeaponParts/";
-        
-        public static int prefabType;
+
+        public WeaponPartType SelectedType = WeaponPartType.CosmeticAttachment;
+        public  int prefabType;
 
         [MenuItem("Tools/XOAProductions/CreateWeaponPart")]
         private static void SpawnWeaponPartCreator()
@@ -48,6 +52,9 @@ namespace XOAProductions.WeaponDesigner
 
         }
 
+        /// <summary>
+        /// Inits this creator instance, always called after user clicks on menuitem
+        /// </summary>
         private void Init()
         {
             partRoot = new GameObject();
@@ -63,21 +70,60 @@ namespace XOAProductions.WeaponDesigner
             partMeshesRoot.transform.parent = partRoot.transform;
 
             weaponPart = partRoot.AddComponent<WeaponPart>();
-
+            currentState = WeaponPartCreationState.SetupPartInfo;
             Selection.activeGameObject = this.gameObject;
+
+            AdaptorMeshes.Add(Resources.Load<Mesh>("AdaptorPreviewMeshes/BarrelAdaptorPreviewMesh"));
+            AdaptorPrefabs.Add((GameObject)AssetDatabase.LoadAssetAtPath("Assets/Weapons/BarrelAdaptor/BarrelAdaptor.prefab", typeof(GameObject)));
         }
 
-        private void CreatePrefab(bool overwrite)
+        /// <summary>
+        /// returns the correct prefab for the Adaptortype
+        /// </summary>
+        /// <param name="type">the type of adaptor</param>
+        /// <returns></returns>
+        public GameObject GetAdaptorPrefab(AdaptorTypes type)
+        {
+            
+            return AdaptorPrefabs[(int)type];
+        }
+
+        /// <summary>
+        /// checks if a prefab exists
+        /// </summary>
+        /// <param name="_partType">the type of the part</param>
+        /// <param name="_partID">the id of the part</param>
+        /// <returns></returns>
+        public bool PrefabExists(int _partType, string _partID)
+        {
+           
+           
+
+            var go = Resources.Load( "WeaponParts/" + WeaponPartTypeStrings.WeaponPartTypes[_partType] + "s/" + _partID) as GameObject;
+           
+            if (go != null)
+                return true;
+            return false;
+        }
+
+        /// <summary>
+        /// creates the prefab, deletes this gameobject
+        /// </summary>
+        /// <param name="overwrite">true if you want to overrite existing prefabs</param>
+        /// <returns></returns>
+        public bool CreatePrefab(bool overwrite)
         {
             CheckAllPrefabFoldersExistAndCreateMissing();
 
-            if (AssetDatabase.LoadAssetAtPath(PathToPartFolder(prefabType) + "/" + partID, typeof(GameObject)) != null)
+            if (PrefabExists(prefabType, partID))
                 if(!overwrite)
-                    return;
+                    return false;
 
-            AssetDatabase.CreateAsset(partRoot, PathToPartFolder(prefabType) + "/" + partID);
+            partRoot.name = partID;
+            PrefabUtility.CreatePrefab(PathToPartFolder(prefabType) + "/" + partID + ".prefab", partRoot);
 
-            DestroyImmediate(this);
+            DestroyImmediate(this.gameObject);
+            return true;
         }
 
         /// <summary>
@@ -104,6 +150,34 @@ namespace XOAProductions.WeaponDesigner
                 }
 
                 i ++;
+            }
+        }
+
+        /// <summary>
+        /// sets up the weapon part with name and id
+        /// </summary>
+        /// <param name="name">the name of the part, from items.json</param>
+        /// <param name="id">the id of the part, from items.json</param>
+        public void SetupWeaponPartInformation(string name, string id, WeaponPartType type)
+        {
+            partName = name;
+            partID = id;
+            prefabType = (int)type;
+
+            weaponPart.PartName = name;
+            weaponPart.PartID = id;
+            weaponPart.PartType = type;
+        }
+
+        /// <summary>
+        /// Draws the adaptor when in the AssignMeshes state
+        /// </summary>
+        public void OnDrawGizmos()
+        {
+            if(currentState == WeaponPartCreationState.AssignMeshes)
+            {
+                
+                Gizmos.DrawMesh(AdaptorMeshes[(int)SelectedType]);
             }
         }
 
