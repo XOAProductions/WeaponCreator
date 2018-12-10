@@ -74,6 +74,14 @@ namespace XOAProductions.WeaponDesigner
             Selection.activeGameObject = this.gameObject;
 
             AdaptorMeshes.Add(Resources.Load<Mesh>("AdaptorPreviewMeshes/BarrelAdaptorPreviewMesh"));
+            AdaptorMeshes.Add(Resources.Load<Mesh>("AdaptorPreviewMeshes/LoadingMechanismAdaptorPreviewMesh"));
+            AdaptorMeshes.Add(Resources.Load<Mesh>("AdaptorPreviewMeshes/ShootingMechanismAdaptorPreviewMesh"));
+            AdaptorMeshes.Add(Resources.Load<Mesh>("AdaptorPreviewMeshes/BarrelAdaptorPreviewMesh"));
+            AdaptorMeshes.Add(Resources.Load<Mesh>("AdaptorPreviewMeshes/BarrelAdaptorPreviewMesh"));
+            AdaptorPrefabs.Add(null);
+            AdaptorPrefabs.Add((GameObject)AssetDatabase.LoadAssetAtPath("Assets/Weapons/AdaptorLoadingMechanism/AdaptorLoadingMechanism.prefab", typeof(GameObject)));
+            AdaptorPrefabs.Add((GameObject)AssetDatabase.LoadAssetAtPath("Assets/Weapons/AdaptorShootingMechanism/AdaptorShootingMechanism.prefab", typeof(GameObject)));
+            AdaptorPrefabs.Add(null);
             AdaptorPrefabs.Add((GameObject)AssetDatabase.LoadAssetAtPath("Assets/Weapons/BarrelAdaptor/BarrelAdaptor.prefab", typeof(GameObject)));
         }
 
@@ -176,8 +184,18 @@ namespace XOAProductions.WeaponDesigner
         {
             if(currentState == WeaponPartCreationState.AssignMeshes)
             {
-                
-                Gizmos.DrawMesh(AdaptorMeshes[(int)SelectedType]);
+                Quaternion rotation;
+                switch ((int)SelectedType)
+                {
+                    case 2:
+                        rotation = Quaternion.Euler(0, 0, 0);
+                        break;
+                    default:
+                        rotation = Quaternion.Euler(0, 0, 0);
+                        break;
+
+                }
+                Gizmos.DrawMesh(AdaptorMeshes[(int)SelectedType],this.partRoot.transform.position, rotation);
             }
         }
 

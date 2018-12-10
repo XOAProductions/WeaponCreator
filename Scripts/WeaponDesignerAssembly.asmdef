@@ -1,7 +1,8 @@
 {
     "name": "WeaponDesignerAssembly",
     "references": [
-        "QuickInspectorAssembly"
+        "QuickInspectorAssembly",
+        "MaterialHiderAssembly"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],

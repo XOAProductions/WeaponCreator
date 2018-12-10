@@ -28,5 +28,13 @@ namespace XOAProductions.WeaponDesigner
             Id = System.Guid.NewGuid().ToString();
         }
 
+        public void Construct(string _name, WeaponStructure _structure)
+        {
+            Name = _name;
+            Structure = _structure;
+
+            Id = System.Guid.NewGuid().ToString();
+        }
+
       }
 }

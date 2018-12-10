@@ -169,7 +169,7 @@ namespace XOAProductions.WeaponDesigner {
 
             Destroy(partToRemove.gameObject);
 
-            //TODO: Obviously, this needs to be animated later on
+           
 
         }
 
@@ -184,6 +184,7 @@ namespace XOAProductions.WeaponDesigner {
             if (adaptor == null)
                 return;
 
+            
             adaptorPart.AddChild(partToAdd);
             adaptorPart.ConnectChildToAdaptor(adaptor, partToAdd);
         }

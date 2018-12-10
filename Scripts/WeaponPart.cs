@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using XOAProductions.Utility;
 
 
 namespace XOAProductions.WeaponDesigner
@@ -44,9 +45,34 @@ namespace XOAProductions.WeaponDesigner
         /// <summary>
         /// the type of part this weapon part represents
         /// </summary>
-        public WeaponPartType PartType { get; set;}
+        [SerializeField]
+        public WeaponPartType PartType;
 
-       
+        private void Start()
+        {
+            ToggleAdaptorVisibility();
+        }
+
+        public void ToggleAdaptorVisibility()
+        {
+            var Hider = new MaterialHider();
+
+            if (AdaptorConnections == null)
+                AdaptorConnections = new Dictionary<WeaponPart, Adaptor>();
+
+            foreach (Adaptor a in Adaptors)
+            {
+                if (!AdaptorConnections.ContainsValue(a)) //adaptor isn't connected
+                {
+                    Hider.HideHierarchy(a.ChildPartTransform.gameObject, this.PartID); //hide the unconnected side
+                    a.isUnconnected = true;
+                }
+                else
+                {
+                    a.isUnconnected = false;
+                }
+            }
+        }
 
         /// <summary>
         /// the name of this weapon part
@@ -137,9 +163,14 @@ namespace XOAProductions.WeaponDesigner
                 return;
 
             child.transform.parent = adaptor.ChildPartTransform;
+            child.transform.localPosition = Vector3.zero;
+            child.transform.localRotation = Quaternion.Euler(0, 0, 0);
 
             AdaptorConnections.Add(child, adaptor);
-          
+
+            MaterialHider hider = new MaterialHider();
+            hider.DisplayHierarchy(adaptor.ChildPartTransform.gameObject, this.PartID); //make connected side visible again
+            adaptor.isUnconnected = false;
             //TODO: here we need to physically move the weapon part to align with the adaptor and do other stuff to make sure everything fits
         }
 
@@ -169,7 +200,15 @@ namespace XOAProductions.WeaponDesigner
                 return;
 
             Children.Remove(child);
+            Adaptor a = AdaptorConnections[child];
             AdaptorConnections.Remove(child);
+
+            if (a != null)
+            {
+                MaterialHider hider = new MaterialHider();
+                hider.HideHierarchy(a.ChildPartTransform.gameObject, this.PartID);
+                a.isUnconnected = true;
+            }
         }    
 
         /// <summary>
@@ -217,6 +256,20 @@ namespace XOAProductions.WeaponDesigner
             Children.Clear();
             if(AdaptorConnections != null)
                 AdaptorConnections.Clear();
+
+            
+        }
+
+        /// <summary>
+        /// finds the adaptor by which this part is connected to it's parent
+        /// </summary>
+        /// <returns>the adaptor by which this part is connected to it's parent, or null if not connected to an adaptor</returns>
+        public Adaptor getConnectingAdaptor()
+        {
+            Adaptor connectingAdaptor = null;
+            this.Parent.AdaptorConnections.TryGetValue(this, out connectingAdaptor);
+
+            return connectingAdaptor;
         }
     }
 }

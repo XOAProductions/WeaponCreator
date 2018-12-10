@@ -25,10 +25,18 @@ namespace XOAProductions.WeaponDesigner
         public Animator anim;
         public Transform ChildPartTransform;
         public WeaponPartType WeaponTypeOfAdaptor;
+        public bool isOpened = false;
+        public bool isUnconnected = true;
+
+        public delegate void AdaptorStateChange();
+        public  event AdaptorStateChange OnAnimatorOpened = delegate { };
+        public  event AdaptorStateChange OnAnimatorNotFullyOpened = delegate { };
 
         private void Start()
         {
+            
             anim = GetComponent<Animator>();
+            isOpened = anim.GetBool(CloseAnimationBoolName);
         }
 
         /// <summary>
@@ -47,7 +55,17 @@ namespace XOAProductions.WeaponDesigner
             anim.SetBool(CloseAnimationBoolName, false);
         }
 
+        public void AdaptorFullyOpened()
+        {
+            isOpened = true;
+            OnAnimatorOpened();
+        }
 
+        public void AdaptorNotFullyOpened()
+        {
+            isOpened = false;
+            OnAnimatorNotFullyOpened();
+        }
 
 
     }
