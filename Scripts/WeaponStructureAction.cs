@@ -100,7 +100,7 @@ namespace XOAProductions.WeaponDesigner
                 
             }
 
-            //We want to remove a part
+            //We want to replace a part
             else if(TypeOfAction == WeaponStructureActionType.ReplacePart)
             {
                 var ConnectingAdaptor = PartToReplace.getConnectingAdaptor(); //see if part that will be removed is connected to an adaptor
@@ -115,7 +115,7 @@ namespace XOAProductions.WeaponDesigner
                     ConnectingAdaptor.Open();
                 }
             }
-
+            //We want to remvoe a part
             else if (TypeOfAction == WeaponStructureActionType.RemovePart)
             {
                 var ConnectingAdaptor = PartToRemove.getConnectingAdaptor();
@@ -182,7 +182,10 @@ namespace XOAProductions.WeaponDesigner
                 Debug.Log(e.Message);
             }
 
-            foreach(Adaptor a in PartToReplace.Adaptors)
+            foreach (Adaptor a in ReplacementPart.Adaptors)
+                a.Open(); //open all adaptors of replacement part so they can animate
+
+            foreach (Adaptor a in PartToReplace.Adaptors)
             {
                 if (PartToReplace.AdaptorConnections.ContainsValue(a))
                 {
@@ -213,9 +216,14 @@ namespace XOAProductions.WeaponDesigner
             foreach (Adaptor a in AffectedAdaptors)
                 a.OnAnimatorOpened -= OnAffectedAdaptorOpened;
 
+            
+
             OnAllAffectedAdaptorsOpenedReplacePart();
+            
+           
 
         }
+
 
         /// <summary>
         /// Replaces the part

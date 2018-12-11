@@ -61,6 +61,7 @@ namespace XOAProductions.WeaponDesigner
                      }
           
             GUI.enabled = true;
+            EditorUtility.SetDirty(part);
         }
     }
 }

@@ -60,12 +60,20 @@ namespace XOAProductions.WeaponDesigner
             if (AdaptorConnections == null)
                 AdaptorConnections = new Dictionary<WeaponPart, Adaptor>();
 
+            if (Adaptors == null)
+                return;
+
             foreach (Adaptor a in Adaptors)
             {
                 if (!AdaptorConnections.ContainsValue(a)) //adaptor isn't connected
                 {
-                    Hider.HideHierarchy(a.ChildPartTransform.gameObject, this.PartID); //hide the unconnected side
                     a.isUnconnected = true;
+
+                    if (a.ChildPartTransform == null)
+                        continue;
+
+                    Hider.HideHierarchy(a.ChildPartTransform.gameObject, this.PartID); //hide the unconnected side
+                   
                 }
                 else
                 {

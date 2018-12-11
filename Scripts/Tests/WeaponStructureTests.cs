@@ -246,7 +246,7 @@ public class WeaponStructureTests {
         WeaponPart notFoundPart = weaponStructure.FindWeaponPartRecursive(x => x.PartName == "LDSKFLSDLSDLLL");
         WeaponPart foundFromAlternateStart = weaponStructure.FindWeaponPartRecursive(x => x == searchedPart, foundPart.Parent);
 
-        yield return new WaitForSeconds(10);
+        yield return new WaitForSeconds(1);
 
         Assert.AreSame(searchedPart, foundPart);
 

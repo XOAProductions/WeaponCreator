@@ -34,6 +34,7 @@ public class WeaponStructureActionTests {
         testObjects.Add(MonoBehaviour.Instantiate(Resources.Load<GameObject>("WeaponParts/LoadingMechanisms/_zzh1k1eiq")) as GameObject); //Loader;
         testObjects.Add(MonoBehaviour.Instantiate(Resources.Load<GameObject>("WeaponParts/FiringMechanisms/_shbhmg5sv")) as GameObject); //Firing;
         testObjects.Add(MonoBehaviour.Instantiate(Resources.Load<GameObject>("WeaponParts/Barrels/_x51in5w8o")) as GameObject); //Barrel;
+        testObjects.Add(MonoBehaviour.Instantiate(Resources.Load<GameObject>("WeaponParts/LoadingMechanisms/_zzh1k1eiq")) as GameObject); //Loader;
 
         int index = 0;
         foreach (GameObject gg in testObjects)
@@ -54,7 +55,52 @@ public class WeaponStructureActionTests {
 
 
     [UnityTest]
-    public IEnumerator WeaponStructureAction_Adds_Parts_Correctly()
+    public IEnumerator WeaponStructureAction_Replaces_Parts_Correctly()
+    {
+        var parts = loadTestObjects();
+
+        var structure = parts[0].GetComponent<WeaponStructure>();
+        var go = parts[0];
+
+        parts[1].transform.parent = go.transform;
+        parts[1].transform.localPosition = Vector3.zero;
+
+        structure.trigger = parts[1].GetComponent<WeaponPart>();
+
+        yield return null;
+
+        var action = new WeaponStructureAction(structure.trigger.Adaptors[0], parts[2].GetComponent<WeaponPart>(), structure);
+        action.BeginAction();
+
+        while (!action.Finalized)
+            yield return null;
+
+
+
+        var action2 = new WeaponStructureAction(parts[2].GetComponent<WeaponPart>().Adaptors[0], parts[3].GetComponent<WeaponPart>(), structure);
+        action2.BeginAction();
+
+        while (!action2.Finalized)
+            yield return null;
+
+        yield return new WaitForSeconds(2);
+
+        var replacementAction = new WeaponStructureAction(parts[2].GetComponent<WeaponPart>(), parts[5].GetComponent<WeaponPart>(), structure);
+        replacementAction.BeginAction();
+
+        while (!replacementAction.Finalized)
+            yield return null;
+
+        yield return new WaitForSeconds(3);
+
+        Assert.IsTrue(parts[2].gameObject == null);
+        Assert.IsTrue(parts[5].transform.IsChildOf(parts[1].transform));
+
+
+    }
+
+    [UnityTest]
+    public IEnumerator WeaponStructureAction_Adds_Parts_Correctly_And_Deletes_Them()
     {
        
 
@@ -90,6 +136,13 @@ public class WeaponStructureActionTests {
         while (!action3.Finalized)
             yield return null;
 
+        Assert.IsTrue(parts[1].gameObject.transform.IsChildOf(parts[0].transform));
+        Assert.IsTrue(parts[2].gameObject.transform.IsChildOf(parts[1].transform));
+        Assert.IsTrue(parts[3].gameObject.transform.IsChildOf(parts[2].transform));
+        Assert.IsTrue(parts[4].gameObject.transform.IsChildOf(parts[3].transform));
+
+
+
         yield return new WaitForSeconds(2);
 
         var removeAction = new WeaponStructureAction(parts[4].GetComponent<WeaponPart>(), structure);
@@ -114,15 +167,14 @@ public class WeaponStructureActionTests {
         while (!removeAction2.Finalized)
             yield return null;
 
-        yield return new WaitForSeconds(10);
+        yield return new WaitForSeconds(2);
+
+
+        Assert.IsTrue(parts[2] == null);
+        Assert.IsTrue(parts[3] == null);
+        Assert.IsTrue(parts[4] == null);
+
     }
 
-    // A UnityTest behaves like a coroutine in PlayMode
-    // and allows you to yield null to skip a frame in EditMode
-    [UnityTest]
-    public IEnumerator WeaponStructureActionTestsWithEnumeratorPasses() {
-        // Use the Assert class to test conditions.
-        // yield to skip a frame
-        yield return null;
-    }
+   
 }

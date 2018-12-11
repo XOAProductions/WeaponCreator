@@ -36,6 +36,7 @@ namespace XOAProductions.WeaponDesigner
         {
             
             anim = GetComponent<Animator>();
+            if(anim != null)
             isOpened = anim.GetBool(CloseAnimationBoolName);
         }
 
