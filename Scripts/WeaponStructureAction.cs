@@ -142,7 +142,9 @@ namespace XOAProductions.WeaponDesigner
         /// </summary>
         void OnActionFinalized()
         {
-            m_Adaptor.OnAnimatorNotFullyOpened -= OnActionFinalized;
+            if(m_Adaptor != null)
+                m_Adaptor.OnAnimatorNotFullyOpened -= OnActionFinalized;
+
             Finalized = true;
         }
 
@@ -175,7 +177,8 @@ namespace XOAProductions.WeaponDesigner
         {
             try
             {
-                m_Adaptor.OnAnimatorOpened -= OnAdaptorOpenedReplacePart;
+                if(m_Adaptor != null)
+                    m_Adaptor.OnAnimatorOpened -= OnAdaptorOpenedReplacePart;
             }
             catch (System.Exception e)
             {
@@ -184,6 +187,8 @@ namespace XOAProductions.WeaponDesigner
 
             foreach (Adaptor a in ReplacementPart.Adaptors)
                 a.Open(); //open all adaptors of replacement part so they can animate
+
+
 
             foreach (Adaptor a in PartToReplace.Adaptors)
             {
@@ -195,8 +200,25 @@ namespace XOAProductions.WeaponDesigner
                 }
             }
 
-            
-            
+            if(AffectedAdaptors.Count == 0) //no adaptors have been affected
+            {
+                Structure.ReplaceWeaponPart(PartToReplace, ReplacementPart);
+
+                foreach (Adaptor a in ReplacementPart.Adaptors)
+                    a.Close();
+
+                if(m_Adaptor != null)
+                {
+                    m_Adaptor.OnAnimatorNotFullyOpened += OnActionFinalized;
+                    m_Adaptor.Close();
+                }
+                else
+                {
+                    OnActionFinalized();
+                }
+
+            }
+
         }
 
         /// <summary>
@@ -235,8 +257,15 @@ namespace XOAProductions.WeaponDesigner
             foreach (Adaptor a in ReplacementPart.Adaptors)
                 a.Close();
 
-            m_Adaptor.OnAnimatorNotFullyOpened += OnActionFinalized;
-            m_Adaptor.Close();
+            if (m_Adaptor != null)
+            {
+                m_Adaptor.OnAnimatorNotFullyOpened += OnActionFinalized;
+                m_Adaptor.Close();
+            }
+            else
+            {
+                OnActionFinalized();
+            }
         }
 
 

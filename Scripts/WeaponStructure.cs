@@ -124,6 +124,7 @@ namespace XOAProductions.WeaponDesigner {
                 //all children transform parent to null
                 partToReplace.DetachAllChildren();
                 partToReplace.transform.parent = null;
+                trigger = replacementPart;
             }
 
             List<WeaponPart> excessParts = new List<WeaponPart>();

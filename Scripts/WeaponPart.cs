@@ -275,6 +275,10 @@ namespace XOAProductions.WeaponDesigner
         public Adaptor getConnectingAdaptor()
         {
             Adaptor connectingAdaptor = null;
+
+            if (this.Parent == null)
+                return connectingAdaptor;
+
             this.Parent.AdaptorConnections.TryGetValue(this, out connectingAdaptor);
 
             return connectingAdaptor;

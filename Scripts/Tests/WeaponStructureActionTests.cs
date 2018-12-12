@@ -8,6 +8,9 @@ using XOAProductions.WeaponDesigner;
 
 public class WeaponStructureActionTests {
 
+
+    public List<GameObject> teardowngameobjects = new List<GameObject>();
+
     [Test]
     public void WeaponStructureActionTestsSimplePasses() {
         // Use the Assert class to test conditions.
@@ -27,6 +30,8 @@ public class WeaponStructureActionTests {
         var weapon = go.AddComponent<Weapon>();
         var structure = go.AddComponent<WeaponStructure>();
 
+       
+
         weapon.Construct("test", structure);
 
         testObjects.Add(go);
@@ -35,6 +40,9 @@ public class WeaponStructureActionTests {
         testObjects.Add(MonoBehaviour.Instantiate(Resources.Load<GameObject>("WeaponParts/FiringMechanisms/_shbhmg5sv")) as GameObject); //Firing;
         testObjects.Add(MonoBehaviour.Instantiate(Resources.Load<GameObject>("WeaponParts/Barrels/_x51in5w8o")) as GameObject); //Barrel;
         testObjects.Add(MonoBehaviour.Instantiate(Resources.Load<GameObject>("WeaponParts/LoadingMechanisms/_zzh1k1eiq")) as GameObject); //Loader;
+        testObjects.Add(MonoBehaviour.Instantiate(Resources.Load<GameObject>("WeaponParts/Triggers/_k5kxxqrjl")) as GameObject); //Trigger;
+        testObjects.Add(MonoBehaviour.Instantiate(Resources.Load<GameObject>("WeaponParts/Triggers/_k5kxxqrjl")) as GameObject); //Trigger;
+        testObjects.Add(MonoBehaviour.Instantiate(Resources.Load<GameObject>("WeaponParts/FiringMechanisms/_shbhmg5sv")) as GameObject); //Firing;
 
         int index = 0;
         foreach (GameObject gg in testObjects)
@@ -49,10 +57,61 @@ public class WeaponStructureActionTests {
             index++;
         }
 
+        teardowngameobjects = testObjects;
 
         return testObjects.ToArray();
+
+       
     }
 
+    [UnityTest]
+    public IEnumerator WeaponStructureAction_Replaces_TopLevel_Part_Correctly()
+    {
+        var parts = loadTestObjects();
+
+        var structure = parts[0].GetComponent<WeaponStructure>();
+        var go = parts[0];
+
+        parts[1].transform.parent = go.transform;
+        parts[1].transform.localPosition = Vector3.zero;
+
+        structure.trigger = parts[1].GetComponent<WeaponPart>();
+
+        yield return null;
+        
+
+        var replaceAction = new WeaponStructureAction(parts[1].GetComponent<WeaponPart>(), parts[6].GetComponent<WeaponPart>(), structure);
+        replaceAction.BeginAction();
+
+        while (!replaceAction.Finalized)
+            yield return null;
+
+        yield return null;
+
+        Assert.IsTrue(parts[6].transform.IsChildOf(parts[0].transform));
+        Assert.IsTrue(parts[1].gameObject == null);
+        Assert.IsTrue(parts[6].GetComponent<WeaponPart>() == structure.trigger);
+
+        var addAction = new WeaponStructureAction(parts[6].GetComponent<WeaponPart>().Adaptors[0], parts[2].GetComponent<WeaponPart>(), structure);
+        addAction.BeginAction();
+        while (!addAction.Finalized)
+            yield return null;
+
+        yield return new WaitForSeconds(2);
+
+        var replaceAction2 = new WeaponStructureAction(structure.trigger, parts[7].GetComponent<WeaponPart>(), structure);
+        replaceAction2.BeginAction();
+        while (!replaceAction2.Finalized)
+            yield return null;
+
+        yield return new WaitForSeconds(2);
+
+        Assert.IsTrue(parts[7].transform.IsChildOf(parts[0].transform));
+        Assert.IsTrue(parts[6].gameObject == null);
+        Assert.IsTrue(parts[2].transform.IsChildOf(parts[7].transform));
+        Assert.IsTrue(parts[7].GetComponent<WeaponPart>() == structure.trigger);
+
+    }
 
     [UnityTest]
     public IEnumerator WeaponStructureAction_Replaces_Parts_Correctly()
@@ -91,10 +150,21 @@ public class WeaponStructureActionTests {
         while (!replacementAction.Finalized)
             yield return null;
 
-        yield return new WaitForSeconds(3);
+        yield return new WaitForSeconds(2);
 
         Assert.IsTrue(parts[2].gameObject == null);
         Assert.IsTrue(parts[5].transform.IsChildOf(parts[1].transform));
+
+        var replacementAction2 = new WeaponStructureAction(parts[3].GetComponent<WeaponPart>(), parts[8].GetComponent<WeaponPart>(), structure);
+        replacementAction2.BeginAction();
+
+        while (!replacementAction2.Finalized)
+            yield return null;
+
+        yield return new WaitForSeconds(2);
+
+        Assert.IsTrue(parts[3].gameObject == null);
+        Assert.IsTrue(parts[8].transform.IsChildOf(parts[1].transform));
 
 
     }
@@ -176,5 +246,15 @@ public class WeaponStructureActionTests {
 
     }
 
+
+    [TearDown]
+    public void AfterEveryTest()
+    {
+        foreach(GameObject go in teardowngameobjects)
+        {
+            if (go != null)
+                GameObject.Destroy(go);
+        }
+    }
    
 }
