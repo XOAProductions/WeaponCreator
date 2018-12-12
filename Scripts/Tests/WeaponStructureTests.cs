@@ -227,7 +227,7 @@ public class WeaponStructureTests {
         result = weaponStructure.FindAllWeaponPartsOfTypeRecursively(WeaponPartType.EnergyContainer);
 
         Assert.AreEqual(result.Count, 0);
-
+       
     }
 
     [UnityTest]

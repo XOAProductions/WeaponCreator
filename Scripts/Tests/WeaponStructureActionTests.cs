@@ -9,7 +9,7 @@ using XOAProductions.WeaponDesigner;
 public class WeaponStructureActionTests {
 
 
-    public List<GameObject> teardowngameobjects = new List<GameObject>();
+    private List<GameObject> teardowngameobjects = new List<GameObject>();
 
     [Test]
     public void WeaponStructureActionTestsSimplePasses() {

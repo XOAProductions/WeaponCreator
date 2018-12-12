@@ -22,9 +22,15 @@ namespace XOAProductions.WeaponDesigner
         Scope = 8,
         CosmeticAttachment = 9
     }
-
+    /// <summary>
+    /// contains string names of possible weaponpart types, mainly used to filter items.json
+    /// </summary>
     public static class WeaponPartTypeStrings{
 
+
+        /// <summary>
+        /// the types a weapon part can be, useful to filter through items.json with these strings
+        /// </summary>
         public static string[] WeaponPartTypes = new string[] { "Trigger",
                                                          "LoadingMechanism",
                                                          "FiringMechanism",
@@ -37,6 +43,7 @@ namespace XOAProductions.WeaponDesigner
                                                          "CosmeticAttachment" };
 
     }
+
     /// <summary>
     /// Base class for every weapon part that's connected in a weapon. Basically the node of the WeaponStructure tree
     /// </summary>
@@ -53,17 +60,23 @@ namespace XOAProductions.WeaponDesigner
             ToggleAdaptorVisibility();
         }
 
+        /// <summary>
+        /// sets all the adaptors that are not connected to be invisble (only the side that's not connected to this part)
+        /// also sets adaptor.isUnconnected to the respective value
+        /// 
+        /// TODO: this is a bit of a hack, should come back to this and clean it up
+        /// </summary>
         public void ToggleAdaptorVisibility()
         {
-            var Hider = new MaterialHider();
+            var Hider = new MaterialHider(); //instantiate new hider
 
-            if (AdaptorConnections == null)
+            if (AdaptorConnections == null) //sometimes this isn't initialized for some reason...
                 AdaptorConnections = new Dictionary<WeaponPart, Adaptor>();
 
-            if (Adaptors == null)
+            if (Adaptors == null) //there are parts that don't have any adaptors (for example a silencer or something like that)
                 return;
 
-            foreach (Adaptor a in Adaptors)
+            foreach (Adaptor a in Adaptors) 
             {
                 if (!AdaptorConnections.ContainsValue(a)) //adaptor isn't connected
                 {
@@ -72,7 +85,8 @@ namespace XOAProductions.WeaponDesigner
                     if (a.ChildPartTransform == null)
                         continue;
 
-                    Hider.HideHierarchy(a.ChildPartTransform.gameObject, this.PartID); //hide the unconnected side
+                    Hider.HideHierarchy(a.ChildPartTransform.gameObject, this.PartID); //hide the unconnected side and set id as this.partid, so we can selectively turn back on
+                                                                                       //only the adaptor that belongs to this part instead of the whole hierarchy below our adaptor
                    
                 }
                 else
@@ -132,25 +146,30 @@ namespace XOAProductions.WeaponDesigner
         /// <param name="_parent">the Parent object of this part</param>
         /// <param name="_children">the Children objects of this part</param>
         /// <param name="_adaptorConnections">OPTIONAL: to which adaptors the children are connected, if not specified the children are connected randomly</param>
+        [System.Obsolete("Constructing with automated connection is deprecated, please use WeaponStructureAction to perfom this task with added control of animations instead.", false)]
         public WeaponPart (WeaponPart _parent, List<WeaponPart> _children, string _partID, Dictionary<WeaponPart, Adaptor> _adaptorConnections = null)
         {
-            ChangeParent(_parent);
-            Children = _children;
-            PartID = _partID;
-
-            if (_adaptorConnections != null)
-                AdaptorConnections = _adaptorConnections;
-            else
-            {
-                AdaptorConnections = new Dictionary<WeaponPart, Adaptor>();
-                int i = 0;
-                foreach (WeaponPart child in Children)
-                {
-                    ConnectChildToAdaptor(Adaptors[i], child);
-                    AdaptorConnections.Add(child, Adaptors[i]);
-                    i++;
-                }
-            }
+            //attaching to other parts has become quite a bit more challenging than this implementation, so WeaponStructureAction should be used instead, 
+            //which has the added benefit of controlling animations, too. I'll leave the code commented out if it's needed again - or should be modified
+            throw new System.NotImplementedException("Please use the WeaponStructureAction class to perform automated connections to other parts");
+           
+           // ChangeParent(_parent);
+           // Children = _children;
+           // PartID = _partID;
+           //
+           // if (_adaptorConnections != null)
+           //     AdaptorConnections = _adaptorConnections;
+           // else
+           // {
+           //     AdaptorConnections = new Dictionary<WeaponPart, Adaptor>();
+           //     int i = 0;
+           //     foreach (WeaponPart child in Children)
+           //     {
+           //         ConnectChildToAdaptor(Adaptors[i], child);
+           //         AdaptorConnections.Add(child, Adaptors[i]);
+           //         i++;
+           //     }
+           // }
 
         }
 
@@ -160,26 +179,29 @@ namespace XOAProductions.WeaponDesigner
         /// <param name="adaptor"></param>
         public void ConnectChildToAdaptor(Adaptor adaptor, WeaponPart child)
         {
-           
-            if (AdaptorConnections == null)
+            //checks
+            if (AdaptorConnections == null) //sometimes this thing isn't initialized properly, don't know why
                 AdaptorConnections = new Dictionary<WeaponPart, Adaptor>();
 
-           // if (AdaptorConnections.ContainsValue(adaptor))//adaptor already connected
-           //     return;
-
-            if (adaptor.WeaponTypeOfAdaptor != child.PartType)
+            if (AdaptorConnections.ContainsValue(adaptor))//adaptor already connected
                 return;
 
+            if (adaptor.WeaponTypeOfAdaptor != child.PartType) //if trying to connect a wrong part
+                return;
+
+            //alignment
             child.transform.parent = adaptor.ChildPartTransform;
             child.transform.localPosition = Vector3.zero;
             child.transform.localRotation = Quaternion.Euler(0, 0, 0);
 
+            //create connection
             AdaptorConnections.Add(child, adaptor);
 
+            //make connected side visible again
             MaterialHider hider = new MaterialHider();
-            hider.DisplayHierarchy(adaptor.ChildPartTransform.gameObject, this.PartID); //make connected side visible again
+            hider.DisplayHierarchy(adaptor.ChildPartTransform.gameObject, this.PartID); 
             adaptor.isUnconnected = false;
-            //TODO: here we need to physically move the weapon part to align with the adaptor and do other stuff to make sure everything fits
+            
         }
 
         /// <summary>
@@ -188,12 +210,14 @@ namespace XOAProductions.WeaponDesigner
         /// <param name="child">the child to add</param>
         public void AddChild(WeaponPart child)
         {
-            if (Children.Contains(child))
+            //checks
+            if (Children.Contains(child))//if part is already a child
                 return;
             
             if (Children.Count == Adaptors.Count) //we can't have more children than adaptors
                 return;
 
+            //add as child
             Children.Add(child);
             child.Parent = this;
         }
@@ -204,15 +228,18 @@ namespace XOAProductions.WeaponDesigner
         /// <param name="child">the child to remove </param>
         public void RemoveChild(WeaponPart child)
         {
-            if (!Children.Contains(child))
+            //checks
+            if (!Children.Contains(child))//if part is no child
                 return;
 
+            //remove child
             Children.Remove(child);
             Adaptor a = AdaptorConnections[child];
             AdaptorConnections.Remove(child);
 
-            if (a != null)
+            if (a != null) //better nullcheck it
             {
+                //hide adaptor again
                 MaterialHider hider = new MaterialHider();
                 hider.HideHierarchy(a.ChildPartTransform.gameObject, this.PartID);
                 a.isUnconnected = true;
@@ -225,12 +252,14 @@ namespace XOAProductions.WeaponDesigner
         /// <param name="newParent">the new Parent</param>
         public void ChangeParent(WeaponPart newParent)
         {
-            if (newParent == null)
+            //checks
+            if (newParent == null)//passed null, TODO: what if we want to make it a toplevel part? might need to check this
                 return;
 
-            if (Parent != null)
+            if (Parent != null) //if we're not toplevel part, remove from previous parent
                 Parent.RemoveChild(this);
 
+            //set as new parent and register as it's child
             Parent = newParent;
 
             Parent.AddChild(this);
@@ -255,14 +284,15 @@ namespace XOAProductions.WeaponDesigner
         /// </summary>
         public void DetachAllChildren()
         {
-            foreach(WeaponPart child in Children)
+            foreach(WeaponPart child in Children) //disconnect the transforms
             {
                 child.transform.parent = null;
                 
             }
 
+            //clear all children and connections
             Children.Clear();
-            if(AdaptorConnections != null)
+            if(AdaptorConnections != null) //sometimes it's not initialized for some reason...
                 AdaptorConnections.Clear();
 
             
@@ -274,12 +304,13 @@ namespace XOAProductions.WeaponDesigner
         /// <returns>the adaptor by which this part is connected to it's parent, or null if not connected to an adaptor</returns>
         public Adaptor getConnectingAdaptor()
         {
-            Adaptor connectingAdaptor = null;
+            Adaptor connectingAdaptor = null; //TODO: i'm not sure if this creates a new instance? it seems to work fine in the tests, but maybe come back later and
+                                              //research wether this might create any problems
 
-            if (this.Parent == null)
+            if (this.Parent == null) //return null if we're toplevel part
                 return connectingAdaptor;
 
-            this.Parent.AdaptorConnections.TryGetValue(this, out connectingAdaptor);
+            this.Parent.AdaptorConnections.TryGetValue(this, out connectingAdaptor); //get adaptor by which we're connected to parent
 
             return connectingAdaptor;
         }

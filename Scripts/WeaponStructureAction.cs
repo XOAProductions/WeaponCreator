@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace XOAProductions.WeaponDesigner
 {
+    /// <summary>
+    /// the type of action the weaponstructureaction can perfom
+    /// </summary>
     public enum WeaponStructureActionType
     {
         AddPart,
@@ -18,20 +21,30 @@ namespace XOAProductions.WeaponDesigner
     /// </summary>
     public class WeaponStructureAction
     {
+        #region internal data
         readonly WeaponStructure Structure;
 
         readonly WeaponPart PartToReplace;
         readonly WeaponPart PartToAdd;
         readonly WeaponPart PartToRemove;
         readonly WeaponPart ReplacementPart;
-        public   Adaptor m_Adaptor { get; private set; }
 
         readonly WeaponStructureActionType TypeOfAction;
-        
 
+
+        #endregion
+
+        #region public fields
+        private List<Adaptor> AffectedAdaptors = new List<Adaptor>();
+
+        public   Adaptor m_Adaptor { get; private set; }
+
+        /// <summary>
+        /// true once this action is finished executing, otherwise false
+        /// </summary>
         public bool Finalized { get; private set; }
 
-        private List<Adaptor> AffectedAdaptors = new List<Adaptor>();
+        #endregion
 
         #region public methods
 
@@ -136,6 +149,7 @@ namespace XOAProductions.WeaponDesigner
 
         #endregion
 
+        #region private methods
 
         /// <summary>
         /// This instance's action is completed
@@ -147,6 +161,8 @@ namespace XOAProductions.WeaponDesigner
 
             Finalized = true;
         }
+
+        #endregion
 
         #region AddPart
 
@@ -190,7 +206,7 @@ namespace XOAProductions.WeaponDesigner
 
 
 
-            foreach (Adaptor a in PartToReplace.Adaptors)
+            foreach (Adaptor a in PartToReplace.Adaptors) //open adatpors of part that'll be replaced
             {
                 if (PartToReplace.AdaptorConnections.ContainsValue(a))
                 {
@@ -200,21 +216,21 @@ namespace XOAProductions.WeaponDesigner
                 }
             }
 
-            if(AffectedAdaptors.Count == 0) //no adaptors have been affected
+            if(AffectedAdaptors.Count == 0) //no adaptors have been affected, thus we don't need to wait for any animations
             {
                 Structure.ReplaceWeaponPart(PartToReplace, ReplacementPart);
 
-                foreach (Adaptor a in ReplacementPart.Adaptors)
+                foreach (Adaptor a in ReplacementPart.Adaptors)//close adaptors of replacement part
                     a.Close();
 
-                if(m_Adaptor != null)
+                if(m_Adaptor != null) //if not toplevel part close the adaptor
                 {
                     m_Adaptor.OnAnimatorNotFullyOpened += OnActionFinalized;
                     m_Adaptor.Close();
                 }
-                else
+                else //if toplevel part, directly finalize the action
                 {
-                    OnActionFinalized();
+                    OnActionFinalized(); 
                 }
 
             }
